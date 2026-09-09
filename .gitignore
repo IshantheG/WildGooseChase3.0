@@ -12,7 +12,7 @@ dist/
 dist-ssr
 *.local
 src/backend/obj/
-src/gbackend/bin/
+src/backend/bin/
 
 # Editor directories and files
 .vscode/*
@@ -24,3 +24,4 @@ src/gbackend/bin/
 *.njsproj
 *.sln
 *.sw?
+.venv/

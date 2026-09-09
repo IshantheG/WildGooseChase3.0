@@ -9,7 +9,7 @@
   --border: #0f1d2e;
   --cyan: #00e5ff;
   --teal: #00ffc8;
-  --violet: #7b5cf5;
+  --violet: #c851ff;
   --azure: #1a8fff;
   --fg: #c8ddf0;
   --fg-dim: #5a7a99;
@@ -200,6 +200,9 @@ body::before {
       color 0.2s,
       border-color 0.2s,
       background-color 0.2s;
+    border: 1px solid var(--border);
+    color: #c8ddf0;
+    background: transparent;
   }
 
   .btn-primary {
@@ -214,12 +217,6 @@ body::before {
   .btn-ghost:hover,
   .nav-link:hover {
     transform: translateY(-1px);
-  }
-
-  .btn-ghost {
-    border: 1px solid var(--border);
-    color: var(--fg-dim);
-    background: transparent;
   }
 
   .btn-ghost:hover {
