@@ -6,7 +6,11 @@ type DashboardCardProps = {
   totalJobs: number;
 };
 
-export function DashboardCard({ jobsApplied, lastSyncDate, totalJobs }: DashboardCardProps) {
+export function DashboardCard({
+  jobsApplied,
+  lastSyncDate,
+  totalJobs,
+}: DashboardCardProps) {
   return (
     <section className="hero-card mx-auto w-full max-w-xl">
       <div className="relative z-10 space-y-8 text-center">
@@ -32,7 +36,6 @@ export function DashboardCard({ jobsApplied, lastSyncDate, totalJobs }: Dashboar
               {lastSyncDate}
             </span>
           </h1>
-          
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">

@@ -55,11 +55,8 @@ export function useResumePdf(dslText: string) {
           return;
         }
 
-        console.log("Reading PDF blob...");
-
         const blob = await res.blob();
 
-        console.log("PDF received:", blob.size, "bytes");
 
         const newUrl = URL.createObjectURL(blob);
 

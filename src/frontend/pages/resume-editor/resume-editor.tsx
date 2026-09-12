@@ -93,19 +93,16 @@ function SelectionToolbar({ toolbar, onAction }) {
 
 export default function ResumeEditor() {
   const [dslText, setDslText] = useState("");
-  const { pdfUrl, isCompiling, error } = useResumePdf(dslText);
+  const {pdfUrl, isCompiling, error } = useResumePdf(dslText);
   const [showAIContext, setShowAIContext] = useState(false);
   const [referenceResumes, setReferenceResumes] = useState([
     { id: "r1", name: "SoftwareEng_Resume_v2.pdf" },
   ]);
-  const [saveState, setSaveState] = useState("saved"); // saved | saving
-  const [version, setVersion] = useState(4);
+  const [saveState, setSaveState] = useState("saved"); 
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const baseline = useRef(JSON.parse(JSON.stringify(INITIAL_FIELDS)));
-  const fieldRefs = useRef({});
-  const docRef = useRef(null);
+  
 
   useEffect(() => {
     if (!toast) return;
