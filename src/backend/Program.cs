@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WildGooseChase.Models;
 using WildGooseChaseResumeApi.Services;
 using WildGooseChase.Data;
+using WildGooseChase.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,11 +23,14 @@ builder.Services.AddCors(options =>
 });
 
 
-
+builder.Services.AddControllers(); 
+builder.Services.AddSingleton<ScraperService>(); 
 builder.Services.AddSingleton<ResumeDslParser>();
 builder.Services.AddSingleton<ResumeCompilerService>();
+builder.Services.AddScoped<JobService>();
 
 var app = builder.Build();
+app.MapControllers();
 
 app.MapGet("/api/test-db", async (AppDbContext db) =>
 {
@@ -37,6 +41,18 @@ app.MapGet("/api/test-db", async (AppDbContext db) =>
         connected = true,
         jobs = jobCount
     });
+});
+
+app.MapGet("/api/debug/controllers", () =>
+{
+    var controllers = typeof(Program)
+        .Assembly
+        .GetTypes()
+        .Where(t => t.Name.EndsWith("Controller"))
+        .Select(t => t.FullName)
+        .ToList();
+
+    return Results.Ok(controllers);
 });
 
 

@@ -1,7 +1,142 @@
+import asyncio
+import json
+import os
+from urllib import error, request
+
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 import time
 
 from scraper.css_selectors import JOB_CARD_SELECTOR, MODAL_SELECTOR, DETAIL_PANEL_SELECTOR, FIELD_ROW_SELECTOR, HEADER_TITLE_SELECTOR, TARGET_FIELDS, JOB_CARD_ID_CHECKBOX_SELECTOR
+
+
+API_BASE_URL = os.getenv("WGC_API_BASE_URL", "http://localhost:5000")
+JOB_BULK_ENDPOINT = f"{API_BASE_URL.rstrip('/')}/api/jobs/bulk"
+
+
+def normalize_text(value) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def to_backend_job(job: dict) -> dict:
+    backend_job: dict[str, object] = {}
+
+    job_id = normalize_text(job.get("Job ID"))
+    if job_id and job_id != "N/A":
+        backend_job["id"] = job_id
+
+    title = normalize_text(job.get("Job Title"))
+    if title:
+        backend_job["title"] = title
+
+    employer = normalize_text(job.get("Organization"))
+    if employer:
+        backend_job["employer"] = employer
+
+    work_term = normalize_text(job.get("Work Term"))
+    if work_term:
+        backend_job["workTerm"] = work_term
+
+    job_type = normalize_text(job.get("Job Type"))
+    if job_type:
+        backend_job["jobType"] = job_type
+
+    employer_job_number = normalize_text(job.get("Employer Internal Job Number"))
+    if employer_job_number:
+        backend_job["employerJobNumber"] = employer_job_number
+
+    openings = job.get("Number of Job Openings")
+    if openings is not None and str(openings).strip() not in {"", "N/A"}:
+        try:
+            backend_job["openings"] = int(str(openings).replace(",", ""))
+        except ValueError:
+            pass
+
+    levels = job.get("Level")
+    if levels is not None and str(levels).strip() not in {"", "N/A"}:
+        if isinstance(levels, list):
+            backend_job["levels"] = [str(level).strip() for level in levels if str(level).strip()]
+        else:
+            backend_job["levels"] = [str(levels).strip()]
+
+    region = normalize_text(job.get("Region"))
+    if region:
+        backend_job["region"] = region
+
+    province = normalize_text(job.get("Job - Province/State"))
+    if province:
+        backend_job["province"] = province
+
+    postal_code = normalize_text(job.get("Job - Postal/Zip Code"))
+    if postal_code:
+        backend_job["postalCode"] = postal_code
+
+    country = normalize_text(job.get("Job - Country"))
+    if country:
+        backend_job["country"] = country
+
+    location_arrangement = normalize_text(job.get("Employment Location Arrangement"))
+    if location_arrangement:
+        backend_job["locationArrangement"] = location_arrangement
+
+    duration = normalize_text(job.get("Work Term Duration"))
+    if duration:
+        backend_job["duration"] = duration
+
+    compensation = normalize_text(job.get("Compensation"))
+    if compensation:
+        backend_job["compensation"] = compensation
+
+    summary = normalize_text(job.get("Job Summary"))
+    if summary:
+        backend_job["summary"] = summary
+
+    responsibilities = normalize_text(job.get("Job Responsibilities"))
+    if responsibilities:
+        backend_job["responsibilities"] = responsibilities
+
+    required_skills = normalize_text(job.get("Required Skills"))
+    if required_skills:
+        backend_job["requiredSkills"] = required_skills
+
+    backend_job["saved"] = False
+    return backend_job
+
+
+async def post_jobs_bulk(jobs: list[dict]) -> int:
+    if not jobs:
+        return 0
+
+    valid_jobs = [to_backend_job(job) for job in jobs if normalize_text(job.get("Job ID")) and normalize_text(job.get("Job ID")) != "N/A"]
+    if not valid_jobs:
+        print("No valid jobs with IDs found in the current batch; skipping upload.")
+        return 0
+
+    payload = json.dumps(valid_jobs, ensure_ascii=False).encode("utf-8")
+
+    def _send_request() -> int:
+        req = request.Request(
+            JOB_BULK_ENDPOINT,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+
+        try:
+            with request.urlopen(req, timeout=30) as response:
+                response_body = response.read().decode("utf-8")
+                if response_body:
+                    print(f"Bulk post response: {response_body}")
+                return len(valid_jobs)
+        except error.HTTPError as exc:
+            error_body = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"Bulk job upload failed with HTTP {exc.code}: {error_body}"
+            ) from exc
+
+    return await asyncio.to_thread(_send_request)
 
 
 async def find_job_cards(page: Page):
@@ -139,6 +274,28 @@ async def scrape_all_pages(page: Page) -> list[dict]:
 
 async def scrape_current_page(page: Page) -> list[dict]:
     jobs = []
+    pending_jobs = []
+
+    async def flush_pending_jobs() -> None:
+        nonlocal pending_jobs
+
+        if not pending_jobs:
+            return
+
+        jobs_to_send = pending_jobs
+        pending_jobs = []
+
+        try:
+            posted_count = await post_jobs_bulk(jobs_to_send)
+            print(f"Posted {posted_count} jobs to {JOB_BULK_ENDPOINT}")
+        except Exception as e:
+            print(f"Bulk upload failed: {e}")
+
+    async def queue_job(job: dict) -> None:
+        pending_jobs.append(job)
+
+        if len(pending_jobs) >= 5:
+            await flush_pending_jobs()
 
     cards = page.locator(JOB_CARD_SELECTOR)
     count = await cards.count()
@@ -159,7 +316,13 @@ async def scrape_current_page(page: Page) -> list[dict]:
             )
 
             jobs.append(job)
+            await queue_job(job)
             await close_job_modal(page)
+
+        except PlaywrightTimeoutError as e:
+            print(f"  TIMEOUT: {e}")
+            await flush_pending_jobs()
+            os._exit(1)
 
         except Exception as e:
             print(f"  ERROR: {e}")
@@ -173,21 +336,22 @@ async def scrape_current_page(page: Page) -> list[dict]:
 
     time.sleep(10)
 
+    await flush_pending_jobs()
+
     return jobs
     
 
-async def scrape_job_fields(page: Page) -> dict:
-    
+async def scrape_job_fields(page: Page) -> dict[str, str]:
     modal = page.locator(MODAL_SELECTOR).first
     panel = modal.locator(DETAIL_PANEL_SELECTOR).first
     rows = panel.locator(FIELD_ROW_SELECTOR)
-    row_count = await rows.count()
 
     scraped: dict[str, str] = {}
-    for i in range(row_count):
+
+    for i in range(await rows.count()):
         row = rows.nth(i)
+
         label_locator = row.locator(".label").first
-        value_locator = row.locator("p").first
 
         if await label_locator.count() == 0:
             continue
@@ -195,17 +359,25 @@ async def scrape_job_fields(page: Page) -> dict:
         raw_label = (await label_locator.inner_text()).strip()
         label = raw_label.rstrip(":").strip()
 
-        if await value_locator.count() > 0:
-            value = (await value_locator.inner_text()).strip()
-        else:
-            value = ""
+        if not label:
+            continue
 
-        if label:
-            scraped[label] = value if value else "N/A"
+        value = await row.evaluate("""
+            row => {
+                const clone = row.cloneNode(true);
+                const label = clone.querySelector('.label');
+
+                if (label) {
+                    label.remove();
+                }
+
+                return clone.innerText.trim();
+            }
+        """)
+
+        scraped[label] = value if value else "N/A"
 
     return scraped
-
-
 
 LABEL_ALIASES = {
     "job-address line one": "Job - Address Line One",

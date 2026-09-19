@@ -77,6 +77,25 @@ public class ScraperService
         _ = MonitorProcessAsync(_process);
     }
 
+    public void Cancel()
+    {
+        var process = _process;
+
+        if (process is null || process.HasExited)
+        {
+            return;
+        }
+
+        try
+        {
+            process.Kill(entireProcessTree: true);
+        }
+        catch (InvalidOperationException)
+        {
+            // Process already exited
+        }
+    }
+
     private async Task MonitorProcessAsync(Process process)
     {
         try

@@ -1,10 +1,20 @@
 
 
 import asyncio
+import json
 from playwright.async_api import async_playwright
 from scraper.scraper import scrape_all_pages, get_waterlooworks_page
 
 WATERLOOWORKS_URL = "https://waterlooworks.uwaterloo.ca/myAccount/co-op/full/jobs.htm"
+
+
+def safe_print(value):
+    text = str(value)
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        print(text.encode("ascii", "backslashreplace").decode("ascii"))
+
 
 async def main():
 
@@ -15,9 +25,8 @@ async def main():
 
         context = browser.contexts[0]
 
-        page = await get_waterlooworks_page(context)       
-        print(page.url)
-
+        page = await get_waterlooworks_page(context)
+        safe_print(page.url)
 
         print("\nDEBUG")
         print("URL:", page.url)
@@ -28,7 +37,7 @@ async def main():
 
         body_text = await page.locator("body").inner_text()
         print("BODY:")
-        print(body_text[:3000])
+        
 
         jobs = await scrape_all_pages(page)
 
@@ -36,11 +45,8 @@ async def main():
         print(f"SCRAPING COMPLETE: {len(jobs)} JOBS")
         print("=" * 60)
 
-        for job in jobs:
-            print(
-                job
-            )
-    
+       
+
 
 if __name__ == "__main__":
     asyncio.run(main())

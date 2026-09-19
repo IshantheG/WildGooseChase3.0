@@ -44,4 +44,24 @@ public class ScraperController : ControllerBase
             startedAt = _scraperService.StartedAt
         });
     }
+
+    [HttpPost("cancel")]
+    public IActionResult Cancel()
+    {
+        if (!_scraperService.IsRunning)
+        {
+            return Ok(new
+            {
+                message = "Scraper is not running."
+            });
+        }
+
+        _scraperService.Cancel();
+
+        return Ok(new
+        {
+            message = "Scraper cancellation requested."
+        });
+    }
+
 }

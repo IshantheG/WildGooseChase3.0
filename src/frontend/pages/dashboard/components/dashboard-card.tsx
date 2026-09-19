@@ -4,13 +4,18 @@ type DashboardCardProps = {
   jobsApplied: number;
   lastSyncDate: string;
   totalJobs: number;
+  syncJobs: () => void;
+  setSyncStatus: (isSyncing: "idle" | "syncing" | "complete") => void;
 };
 
 export function DashboardCard({
   jobsApplied,
   lastSyncDate,
   totalJobs,
+  setSyncStatus,
+  syncJobs,
 }: DashboardCardProps) {
+  
   return (
     <section className="hero-card mx-auto w-full max-w-xl">
       <div className="relative z-10 space-y-8 text-center">
@@ -39,7 +44,7 @@ export function DashboardCard({
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <button type="button" className="btn-primary flex-1">
+          <button type="button" className="btn-primary flex-1" onClick={() => { setSyncStatus("syncing"); syncJobs(); }}>
             Sync Jobs
           </button>
           <Link to="/jobs" className="btn-ghost flex-1">

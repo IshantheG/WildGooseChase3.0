@@ -6,34 +6,41 @@ export function useSyncJobsList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const cancelSync = async () => {
+    try {
+      const response = await fetch(`${API_URL}/scraper/cancel`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "Failed to cancel sync.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel sync.");
+      throw err;
+    }
+  };
+
   const syncJobs = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const startResponse = await fetch(
-        `${API_URL}/scraper/start`,
-        {
-          method: "POST",
-        }
-      );
+      const startResponse = await fetch(`${API_URL}/scraper/start`, {
+        method: "POST",
+      });
 
       if (!startResponse.ok) {
         const data = await startResponse.json().catch(() => null);
 
-        throw new Error(
-          data?.message || "Failed to start scraper."
-        );
+        throw new Error(data?.message || "Failed to start scraper.");
       }
 
       while (true) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000)
-        );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        const statusResponse = await fetch(
-          `${API_URL}/scraper/status`
-        );
+        const statusResponse = await fetch(`${API_URL}/scraper/status`);
 
         if (!statusResponse.ok) {
           throw new Error("Failed to check scraper status.");
@@ -46,11 +53,7 @@ export function useSyncJobsList() {
         }
       }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to sync jobs."
-      );
+      setError(err instanceof Error ? err.message : "Failed to sync jobs.");
     } finally {
       setLoading(false);
     }
@@ -58,6 +61,7 @@ export function useSyncJobsList() {
 
   return {
     syncJobs,
+    cancelSync,
     loading,
     error,
   };
