@@ -27,6 +27,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<ScraperService>(); 
 builder.Services.AddSingleton<ResumeDslParser>();
 builder.Services.AddSingleton<ResumeCompilerService>();
+builder.Services.AddScoped<AIContextService>();
 builder.Services.AddScoped<JobService>();
 
 var app = builder.Build();

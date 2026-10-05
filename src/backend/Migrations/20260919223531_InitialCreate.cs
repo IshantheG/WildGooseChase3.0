@@ -11,6 +11,19 @@ namespace WildGooseChase.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AIContext",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    ResumeBank = table.Column<string>(type: "text", nullable: true),
+                    AIPrompt = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AIContext", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Jobs",
                 columns: table => new
                 {
@@ -40,18 +53,6 @@ namespace WildGooseChase.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MasterResumes",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "text", nullable: false),
-                    Text = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MasterResumes", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Resumes",
                 columns: table => new
                 {
@@ -69,10 +70,10 @@ namespace WildGooseChase.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Jobs");
+                name: "AIContext");
 
             migrationBuilder.DropTable(
-                name: "MasterResumes");
+                name: "Jobs");
 
             migrationBuilder.DropTable(
                 name: "Resumes");

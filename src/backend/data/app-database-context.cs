@@ -12,5 +12,5 @@ public class AppDbContext : DbContext
     public DbSet<Resume> Resumes => Set<Resume>();
     public DbSet<Job> Jobs => Set<Job>();
 
-    public DbSet<MasterResume> MasterResumes => Set<MasterResume>();
+    public DbSet<AIContext> AIContext => Set<AIContext>();
 }

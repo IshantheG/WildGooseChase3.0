@@ -2,6 +2,8 @@ namespace WildGooseChase.Models;
 
 public record CompileRequestDto(string? DslText);
 
+public record SaveTextRequest(string? Text);
+
 public record Job
 {
     public string Id { get; set; } = "";
@@ -35,10 +37,12 @@ public record Resume {
     
 };
 
-public record MasterResume
+public record AIContext
 {
     public string Id { get; set; } = "";
 
-    public string? Text { get; set; } = "";
+    public string? ResumeBank { get; set; } = "";
+
+    public string? AIPrompt { get; set; } = "";
 }
 

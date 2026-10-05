@@ -127,11 +127,20 @@ private static string EscapeWithFormatting(string text)
         sb.AppendLine($@"\resumeSubheading{{{EscapeWithFormatting(parts[0])}}}{{{EscapeWithFormatting(parts[1])}}}{{{EscapeWithFormatting(parts[2])}}}{{{EscapeWithFormatting(parts[3])}}}");}
 
     private static void EmitProjectHeading(StringBuilder sb, string content)
+{
+    var parts = SplitFields(content, maxCount: 4, minCount: 1, markerForError: "###");
+
+    var name = $@"\textbf{{{EscapeWithFormatting(parts[0])}}}";
+    var url = parts[3];
+
+    if (!string.IsNullOrWhiteSpace(url))
     {
-        var parts = SplitFields(content, maxCount: 3, minCount: 1, markerForError: "###");
-        var left = $@"\textbf{{{EscapeWithFormatting(parts[0])}}} $|$ \emph{{{EscapeWithFormatting(parts[1])}}}";
-        sb.AppendLine($@"\resumeProjectHeading{{{left}}}{{{EscapeWithFormatting(parts[2])}}}");
+        name = $@"\href{{{EscapeUrl(url)}}}{{\underline{{{name}}}}}";
     }
+
+    var left = $@"{name} $|$ \emph{{{EscapeWithFormatting(parts[1])}}}";
+    sb.AppendLine($@"\resumeProjectHeading{{{left}}}{{{EscapeWithFormatting(parts[2])}}}");
+}
 
     private static void EmitSkillLine(StringBuilder sb, string content)
     {
@@ -223,4 +232,20 @@ private static string EscapeWithFormatting(string text)
         }
         return sb.ToString();
     }
+
+    private static string EscapeUrl(string url)
+{
+    var sb = new StringBuilder();
+    foreach (var c in url.Trim())
+    {
+        switch (c)
+        {
+            case '%': sb.Append(@"\%"); break;
+            case '#': sb.Append(@"\#"); break;
+            case '\\': sb.Append(@"\\"); break;
+            default: sb.Append(c); break;
+        }
+    }
+    return sb.ToString();
+}
 }

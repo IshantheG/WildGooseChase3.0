@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace WildGooseChaseResumeApi.Services;
+namespace WildGooseChase.Services;
 
 public class LatexCompileException : Exception
 {

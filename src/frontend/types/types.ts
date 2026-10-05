@@ -18,3 +18,9 @@ export interface Job {
   responsibilities: string;
   requiredSkills: string[];
 }
+
+export type AIContextResponse = {
+  id: string;
+  resumeBank?: string | null;
+  aiPrompt?: string | null;
+};

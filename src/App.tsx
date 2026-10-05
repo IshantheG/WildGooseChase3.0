@@ -15,10 +15,7 @@ function App() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/" element={<DashboardPage />} />
           <Route path="/settings" element={<div>Settings Page</div>} />
-          <Route
-            path="/resume-bank"
-            element={<ResumeBank existingValue="some-value" />}
-          />
+          <Route path="/resume-bank" element={<ResumeBank />} />
           <Route path="/resume-editor" element={<ResumeEditor />} />
         </Routes>
       </SectionShell>

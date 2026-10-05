@@ -11,7 +11,7 @@ using WildGooseChase.Data;
 namespace WildGooseChase.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260905185756_InitialCreate")]
+    [Migration("20260919223531_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -23,6 +23,22 @@ namespace WildGooseChase.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("WildGooseChase.Models.AIContext", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AIPrompt")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResumeBank")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AIContext");
+                });
 
             modelBuilder.Entity("WildGooseChase.Models.Job", b =>
                 {
@@ -86,19 +102,6 @@ namespace WildGooseChase.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Jobs");
-                });
-
-            modelBuilder.Entity("WildGooseChase.Models.MasterResume", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Text")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MasterResumes");
                 });
 
             modelBuilder.Entity("WildGooseChase.Models.Resume", b =>
